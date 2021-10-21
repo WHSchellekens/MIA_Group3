@@ -66,36 +66,37 @@ def nuclei_measurement():
     fig2 = plt.figure(figsize=(16,8))
     ax1  = fig2.add_subplot(121)
     line1, = ax1.plot(test_y, predicted_y, ".g", markersize=3)
+    plt.plot(test_y, test_y, "r")
     ax1.grid()
     ax1.set_xlabel('Area')
     ax1.set_ylabel('Predicted Area')
     ax1.set_title('Training with full sample')
     
-    # visualize the regression curve
-    fig3 = plt.figure(figsize=(10,10))
-    ax1 = fig3.add_subplot(111)
-    util.plot_regression(training_x, training_y, Theta, ax1)
-    ax1.grid()
-    ax1.set_xlabel('x')
-    ax1.set_ylabel('y')
-    ax1.legend(('Original data', 'Regression curve', 'Predicted Data', 'Error'))
-    ax1.set_title('Training set (full sample)')
+    # # visualize the regression curve
+    # fig3 = plt.figure(figsize=(10,10))
+    # ax1 = fig3.add_subplot(111)
+    # util.plot_regression(training_x, training_y, Theta, ax1)
+    # ax1.grid()
+    # ax1.set_xlabel('x')
+    # ax1.set_ylabel('y')
+    # ax1.legend(('Original data', 'Regression curve', 'Predicted Data', 'Error'))
+    # ax1.set_title('Training set (full sample)')
     
-    fig4 = plt.figure(figsize=(10,10))
-    ax2 = fig4.add_subplot(111)
-    util.plot_regression(test_x, test_y, Theta, ax2)
-    ax2.grid()
-    ax2.set_xlabel('x')
-    ax2.set_ylabel('y')
-    ax2.legend(('Original data', 'Regression curve', 'Predicted Data', 'Error'))
-    ax2.set_title('Test set')
+    # fig4 = plt.figure(figsize=(10,10))
+    # ax2 = fig4.add_subplot(111)
+    # util.plot_regression(test_x, test_y, Theta, ax2)
+    # ax2.grid()
+    # ax2.set_xlabel('x')
+    # ax2.set_ylabel('y')
+    # ax2.legend(('Original data', 'Regression curve', 'Predicted Data', 'Error'))
+    # ax2.set_title('Test set')
     
     #training with smaller number of training samples
     #---------------------------------------------------------------------#
     # TODO: Train a model with reduced dataset size (e.g. every fourth
     # training sample).
-    small_training_x = train_x[0:5000,:] # shape (24, 24, 3, 21910)
-    small_training_y = training_y[0:5000,:] # shape (21910, 1)
+    small_training_x = train_x[0:5000,:] # shape (24, 24, 3, 5000)
+    small_training_y = training_y[0:5000,:] # shape (5000, 1)
     small_Theta, small_e = reg.ls_solve(small_training_x, small_training_y)
     small_predicted_y=testing_x.dot(small_Theta)
     
@@ -107,6 +108,7 @@ def nuclei_measurement():
     # visualize the results
     ax2  = fig2.add_subplot(122)
     line2, = ax2.plot(test_y, small_predicted_y, ".g", markersize=3)
+    plt.plot(test_y, test_y, "r")
     ax2.grid()
     ax2.set_xlabel('Area')
     ax2.set_ylabel('Predicted Area')
