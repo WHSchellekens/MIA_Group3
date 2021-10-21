@@ -1,0 +1,144 @@
+def nuclei_classification():
+    ## dataset preparation
+    fn = '../data/nuclei_data_classification.mat'
+    mat = scipy.io.loadmat(fn)
+
+    test_images = mat["test_images"] # (24, 24, 3, 20730)
+    test_y = mat["test_y"] # (20730, 1)
+    training_images = mat["training_images"] # (24, 24, 3, 14607)
+    training_y = mat["training_y"] # (14607, 1)
+    validation_images = mat["validation_images"] # (24, 24, 3, 7303)
+    validation_y = mat["validation_y"] # (7303, 1)
+
+    ## dataset preparation
+    training_x, validation_x, test_x = util.reshape_and_normalize(training_images, validation_images, test_images)      
+    
+    ## training linear regression model
+    #-------------------------------------------------------------------#
+    # TODO: Select values for the learning rate (mu), batch size
+    # (batch_size) and number of iterations (num_iterations), as well as
+    # initial values for the model parameters (Theta) that will result in
+    # fast training of an accurate model for this classification problem.
+    
+    mu = 0.00003
+    mu0 = mu
+    
+    batch_size = 350
+    num_iterations = 3000
+    Theta = -0.000105
+    
+    #-------------------------------------------------------------------#
+
+    # create empty accuracy list
+    acc_list = [None]*num_iterations
+    
+    test_x_ones = util.addones(test_x)
+    y_true = test_y
+    
+    
+    xx = np.arange(num_iterations)
+    loss = np.empty(*xx.shape)
+    loss[:] = np.nan
+    validation_loss = np.empty(*xx.shape)
+    validation_loss[:] = np.nan
+    g = np.empty(*xx.shape)
+    g[:] = np.nan
+
+    fig = plt.figure(figsize=(8,8))
+    ax2 = fig.add_subplot(111)
+    ax2.set_xlabel('Iteration')
+    ax2.set_ylabel('Loss (average per sample)')
+    
+    titletxt = 'mu = '+str(mu)
+    ax2.set_title(titletxt)
+    
+    h1, = ax2.plot(xx, loss, linewidth=2) #'Color', [0.0 0.2 0.6],
+    h2, = ax2.plot(xx, validation_loss, linewidth=2) #'Color', [0.8 0.2 0.8],
+    h3, = ax2.plot(xx, acc_list, linewidth=2)
+    
+    ax2.set_ylim(0, 0.95)
+    ax2.set_xlim(0, num_iterations)
+    ax2.grid()
+
+    text_str2 = 'iter.: {}, loss: {:.3f}, val. loss: {:.3f}'.format(0, 0, 0)
+    txt2 = ax2.text(0.3, 0.95, text_str2, bbox={'facecolor': 'white', 'alpha': 1, 'pad': 10}, transform=ax2.transAxes)
+    
+    for k in np.arange(num_iterations):
+        # pick a batch at random
+        idx = np.random.randint(training_x.shape[0], size=batch_size)
+
+        training_x_ones = util.addones(training_x[idx,:])
+        validation_x_ones = util.addones(validation_x)
+
+        # the loss function for this particular batch
+        loss_fun = lambda Theta: cad.lr_nll(training_x_ones, training_y[idx], Theta)
+        
+        # gradient descent
+        # instead of the numerical gradient, we compute the gradient with
+        # the analytical expression, which is much faster
+        Theta_new = Theta - mu*cad.lr_agrad(training_x_ones, training_y[idx], Theta).T
+
+        loss[k] = loss_fun(Theta_new)/batch_size
+        validation_loss[k] = cad.lr_nll(validation_x_ones, validation_y, Theta_new)/validation_x.shape[0]
+        
+        # accuracy
+        y_p = cad.sigmoid(test_x_ones.dot(Theta_new))
+        y_pred = [None]*len(y_p)
+        for i in range(len(y_p)):
+            if y_p[i]<0.5:
+                y_pred[i]=0
+            else:
+                y_pred[i]=1
+                
+        accuracy = accuracy_score(y_true, y_pred, normalize=True)
+        
+        acc_list[k] = accuracy
+        
+        
+        # Variable mu 
+        mu = mu - mu*(validation_loss[k]/500)
+        #######mu = mu - mu*(loss[k]*np.exp(-k))
+        
+        # visualize the training
+        h1.set_ydata(loss)
+        h2.set_ydata(validation_loss)
+        h3.set_ydata(acc_list)
+        text_str2 = 'iter.: {}, loss: {:.3f}, val. loss={:.3f}, acc={:.3f} '.format(k, loss[k], validation_loss[k], accuracy)
+        txt2.set_text(text_str2)
+        
+        titletxt = 'mu = '+str(round(mu, 9))
+        ax2.set_title(titletxt)
+        
+        Theta = None
+        Theta = np.array(Theta_new)
+        Theta_new = None
+        tmp = None
+
+        display(fig)
+        clear_output(wait = True)
+        plt.pause(.005)
+        
+        if k > 5:
+            if (abs(validation_loss[k-1] - validation_loss[k]) < 0.0001) and (abs(validation_loss[k-2] - validation_loss[k-1]) < 0.0001):
+                titletxt = 'Loop finished, mu = '+str(round(mu, 9))
+                ax2.set_title(titletxt)
+                ax2.set_xlim(0, k)
+                display(fig)
+                break
+        
+        #### implement validation accuracy & test accuracy
+    
+#    y_p = cad.sigmoid(test_x_ones.dot(Theta))
+#    
+#    y_pred = [None]*len(y_p)
+#    for i in range(len(y_p)):
+#            if y_p[i]<0.5:
+#                y_pred[i]=0
+#            else:
+#                y_pred[i]=1
+    
+    accuracy = accuracy_score(y_true, y_pred, normalize=True)
+    
+    acc_list = acc_list[:k]
+
+    return y_p, y_true, accuracy, acc_list
