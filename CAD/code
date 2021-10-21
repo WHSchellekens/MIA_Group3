@@ -1,3 +1,4 @@
+
 def nuclei_classification():
     ## dataset preparation
     fn = '../data/nuclei_data_classification.mat'
@@ -24,7 +25,7 @@ def nuclei_classification():
     mu0 = mu
     
     batch_size = 350
-    num_iterations = 4000
+    num_iterations = 100#4000
     Theta = -0.000105
     
     #-------------------------------------------------------------------#
@@ -82,7 +83,7 @@ def nuclei_classification():
         text_str2 = 'iter.: {}, loss: {:.3f}, val. loss={:.3f} '.format(k, loss[k], validation_loss[k])
         txt2.set_text(text_str2)
         
-        titletxt = 'mu = '+str(mu)
+        titletxt = 'mu = '+str(round(mu, 9))
         ax2.set_title(titletxt)
         
         Theta = None
@@ -96,11 +97,26 @@ def nuclei_classification():
         
         if k > 5:
             if (abs(validation_loss[k-1] - validation_loss[k]) < 0.00001) and (abs(validation_loss[k-2] - validation_loss[k-1]) < 0.00001):
-                titletxt = 'Loop finished, mu = '+str(mu)
+                titletxt = 'Loop finished, mu = '+str(round(mu, 9))
                 ax2.set_title(titletxt)
+                ax2.set_xlim(0, k)
                 display(fig)
                 break
         
         #### implement validation accuracy & test accuracy
+    test_x_ones = util.addones(test_x)
+    
+    y_p = cad.sigmoid(test_x_ones.dot(Theta))
+    
+    y_pred = [None]*len(y_p)
+    for i in range(len(y_p)):
+            if y_p[i]<0.5:
+                y_pred[i]=0
+            else:
+                y_pred[i]=1
+                    
+    y_true = test_y
+    
+    accuracy = accuracy_score(y_true, y_pred, normalize=True)
 
-    return loss, validation_loss
+    return y_p, accuracy
